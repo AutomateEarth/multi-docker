@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t omesadev/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run omesadev/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t omesadev/multi-client ./client
+  - docker build -t omesadev/multi-nginx ./nginx
+  - docker build -t omesadev/multi-server ./server
+  - docker build -t omesadev/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push omesadev/multi-client
+  - docker push omesadev/multi-nginx
+  - docker push omesadev/multi-server
+  - docker push omesadev/multi-worker
